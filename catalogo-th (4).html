@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TH Auto Repasse – Catálogo B2B</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #111; color: #eee; min-height: 100vh; }
+
+header { background: linear-gradient(135deg,#1a1a1a,#1f1f1f); border-bottom: 2px solid #C9A84C; padding: 18px 20px; text-align: center; }
+header h1 { color: #C9A84C; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; }
+header p { color: #555; font-size: 0.74rem; margin-top: 3px; }
+
+.busca-wrap { max-width: 860px; margin: 14px auto 0; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+.busca-wrap input { width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; color: #eee; padding: 11px 16px; border-radius: 10px; font-size: 0.88rem; outline: none; transition: border 0.2s; }
+.busca-wrap input:focus { border-color: #C9A84C; }
+.busca-wrap input::placeholder { color: #444; }
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; }
+.filtros select { flex: 1; min-width: 130px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #eee; padding: 9px 12px; border-radius: 10px; font-size: 0.84rem; outline: none; cursor: pointer; }
+.filtros select:focus { border-color: #C9A84C; }
+
+.count { text-align: center; color: #444; font-size: 0.73rem; margin: 10px 0 2px; }
+
+/* LISTA — mobile */
+.lista { max-width: 680px; margin: 0 auto; padding: 12px 14px; display: flex; flex-direction: column; }
+.item { background: #1a1a1a; border-bottom: 1px solid #1f1f1f; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; transition: background 0.15s; }
+.item:first-child { border-radius: 12px 12px 0 0; border-top: 1px solid #222; }
+.item:last-child { border-radius: 0 0 12px 12px; border-bottom: 1px solid #222; }
+.item:only-child { border-radius: 12px; border: 1px solid #222; }
+.item:hover { background: #1d1d1d; }
+
+/* GRID — desktop */
+@media (min-width: 768px) {
+  .lista { max-width: 1060px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; padding: 16px; }
+  .item { border-radius: 12px !important; border: 1px solid #222 !important; border-bottom: 1px solid #222 !important; }
+  .item:hover { border-color: #C9A84C44 !important; }
+}
+
+.item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.item-modelo { font-weight: 700; font-size: 0.92rem; color: #fff; line-height: 1.3; flex: 1; }
+.item-codigo { background: #C9A84C15; color: #C9A84C; padding: 2px 9px; border-radius: 20px; font-size: 0.67rem; font-family: monospace; letter-spacing: 1px; white-space: nowrap; }
+.item-meta { display: flex; flex-wrap: wrap; gap: 5px 12px; }
+.item-meta span { font-size: 0.77rem; color: #777; }
+.item-meta .cor { font-size: 0.72rem; color: #555; }
+.item-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.item-preco { display: flex; flex-direction: column; }
+.preco-label { font-size: 0.62rem; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+.preco-valor { color: #4caf50; font-weight: 700; font-size: 0.92rem; margin-top: 1px; }
+.fipe-val { font-size: 0.72rem; color: #888; margin-top: 2px; }
+.fipe-val strong { color: #C9A84C; }
+.item-btns { display: flex; gap: 8px; }
+.btn-contato { background: #C9A84C; color: #111; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+.btn-contato:hover { background: #e0bc5c; }
+.btn-laudo { background: transparent; color: #C9A84C; border: 1px solid #C9A84C44; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+.btn-laudo:hover { background: #C9A84C15; border-color: #C9A84C; }
+
+footer { text-align: center; padding: 24px 16px; color: #333; font-size: 0.73rem; border-top: 1px solid #1a1a1a; margin-top: 8px; }
+
+.loading { text-align: center; padding: 60px 20px; color: #444; }
+.loading .spin { font-size: 2rem; animation: spin 1s linear infinite; display: inline-block; margin-bottom: 10px; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: #000000dd; z-index: 300; align-items: center; justify-content: center; padding: 16px; }
+.modal-overlay.show { display: flex; }
+.modal { background: #1e1e1e; border: 1px solid #C9A84C33; border-radius: 16px; padding: 26px 22px; max-width: 400px; width: 100%; }
+.modal-icon { font-size: 1.8rem; margin-bottom: 8px; text-align: center; }
+.modal h3 { color: #C9A84C; font-size: 0.95rem; margin-bottom: 4px; text-align: center; }
+.modal-veiculo { color: #888; font-size: 0.8rem; margin-bottom: 14px; text-align: center; }
+.modal-aviso { background: #2a1f08; border: 1px solid #C9A84C22; border-radius: 8px; padding: 10px 12px; font-size: 0.79rem; color: #d4a843; margin-bottom: 14px; line-height: 1.5; }
+.modal-campos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.modal-campos label { font-size: 0.72rem; color: #888; display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+.modal-campos input { width: 100%; background: #252525; border: 1px solid #333; color: #eee; padding: 9px 12px; border-radius: 8px; font-size: 0.85rem; outline: none; font-family: inherit; }
+.modal-campos input:focus { border-color: #C9A84C; }
+.modal-sub { color: #555; font-size: 0.72rem; margin-bottom: 14px; text-align: center; }
+.modal-btns { display: flex; gap: 8px; justify-content: center; }
+.modal-confirm { background: #C9A84C; color: #111; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; flex: 1; }
+.modal-cancel { background: transparent; color: #666; border: 1px solid #2a2a2a; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ TH AUTO REPASSE</h1>
+  <p id="dataInfo">Veículos disponíveis para repasse B2B</p>
+</header>
+
+<div class="busca-wrap">
+  <input type="text" id="busca" placeholder="🔍  Buscar por modelo..." oninput="filtrar()">
+  <div class="filtros">
+    <select id="filtroEstado" onchange="filtrar()"><option value="">📍 Todos os estados</option></select>
+    <select id="filtroCidade" onchange="filtrar()"><option value="">🏙️ Todas as cidades</option></select>
+  </div>
+</div>
+
+<div class="count" id="count"></div>
+<div class="lista" id="lista">
+  <div class="loading"><div class="spin">⚙️</div><p>Carregando veículos...</p></div>
+</div>
+
+<footer>TH Auto Repasse · Todos os preços sujeitos a aprovação · Exclusivo B2B</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)fecharModal()">
+  <div class="modal">
+    <div class="modal-icon" id="mIcon"></div>
+    <h3 id="mTitulo"></h3>
+    <div class="modal-veiculo" id="mVeiculo"></div>
+    <div class="modal-aviso" id="mAviso"></div>
+    <div class="modal-campos">
+      <div>
+        <label>Seu nome ✱</label>
+        <input type="text" id="mNome" placeholder="Nome completo">
+      </div>
+      <div>
+        <label>Seu WhatsApp ✱</label>
+        <input type="tel" id="mTel" placeholder="(62) 99999-9999">
+      </div>
+    </div>
+    <div class="modal-sub">Ao confirmar você será direcionado ao WhatsApp do nosso time.</div>
+    <div class="modal-btns">
+      <button class="modal-confirm" id="mConfirm"></button>
+      <button class="modal-cancel" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBHcpM_BMzo6y98HvlFXwhAwV4Ot5-1gm8",
+  authDomain: "th-auto-repasse.firebaseapp.com",
+  projectId: "th-auto-repasse",
+  storageBucket: "th-auto-repasse.firebasestorage.app",
+  messagingSenderId: "227004517822",
+  appId: "1:227004517822:web:132ea3f2c140ccfc85bdef"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let todosVeiculos = [], waI = '5562995181314', waL = '5562995181314';
+let cfgPctMin = 0.71, cfgPctMax = 0.75, cfgMargem = 0;
+
+// Carregar config e veículos juntos, renderizar só quando os dois chegarem
+let configCarregada = false, veiculosCarregados = false;
+
+function tentarRenderizar() {
+  if (configCarregada && veiculosCarregados) filtrar();
+}
+
+db.collection('catalogo').doc('config').onSnapshot(cfgDoc => {
+  if (cfgDoc.exists) {
+    const c = cfgDoc.data();
+    cfgPctMin = (c.pctMin || 71) / 100;
+    cfgPctMax = (c.pctMax || 75) / 100;
+    cfgMargem = c.margem || 0;
+    if (c.waInteresse) waI = c.waInteresse;
+    if (c.waLaudo) waL = c.waLaudo;
+  }
+  configCarregada = true;
+  tentarRenderizar();
+});
+
+db.collection('catalogo').doc('atual').onSnapshot(doc => {
+  if (!doc.exists) {
+    document.getElementById('lista').innerHTML = '<div class="loading"><p style="color:#555">Nenhum veículo disponível no momento.</p></div>';
+    return;
+  }
+  const data = doc.data();
+  todosVeiculos = data.veiculos || [];
+  if (data.data) document.getElementById('dataInfo').textContent = 'Atualizado em ' + data.data + ' · Exclusivo B2B';
+
+  const estados = [...new Set(todosVeiculos.map(v=>v.estado).filter(Boolean))].sort();
+  const selE = document.getElementById('filtroEstado');
+  selE.innerHTML = '<option value="">📍 Todos os estados</option>';
+  estados.forEach(e => { const o=document.createElement('option'); o.value=e; o.textContent=e; selE.appendChild(o); });
+
+  veiculosCarregados = true;
+  tentarRenderizar();
+});
+
+function calcAprovacao(fipeRaw) {
+  if (!fipeRaw || fipeRaw <= 0) return 'consultar';
+  const min = Math.floor((fipeRaw * cfgPctMin + cfgMargem) / 100) * 100;
+  const max = Math.floor((fipeRaw * cfgPctMax + cfgMargem) / 100) * 100;
+  return 'entre R$ ' + min.toLocaleString('pt-BR') + ' e R$ ' + max.toLocaleString('pt-BR');
+}
+
+function filtrar() {
+  const b = document.getElementById('busca').value.toLowerCase();
+  const e = document.getElementById('filtroEstado').value;
+  const selC = document.getElementById('filtroCidade');
+  const c = selC.value;
+
+  const cidades = [...new Set(todosVeiculos.filter(v=>!e||v.estado===e).map(v=>v.cidade).filter(Boolean))].sort();
+  selC.innerHTML = '<option value="">🏙️ Todas as cidades</option>';
+  cidades.forEach(cd => { const o=document.createElement('option'); o.value=cd; o.textContent=cd; selC.appendChild(o); });
+  if (cidades.includes(c)) selC.value = c;
+
+  const filtrado = todosVeiculos.filter(v => {
+    const mb = !b || v.modelo.toLowerCase().includes(b) || v.codigo.toLowerCase().includes(b);
+    const me = !e || v.estado === e;
+    const mc = !selC.value || v.cidade === selC.value;
+    return mb && me && mc;
+  });
+
+  renderLista(filtrado);
+}
+
+function renderLista(lista) {
+  const el = document.getElementById('lista');
+  document.getElementById('count').textContent = lista.length + ' veículo(s) disponível(is)';
+  if (!lista.length) { el.innerHTML = '<div class="loading"><p style="color:#555">Nenhum veículo encontrado.</p></div>'; return; }
+  el.innerHTML = '';
+  lista.forEach(v => {
+    const item = document.createElement('div'); item.className = 'item';
+    item.innerHTML = `
+      <div class="item-top">
+        <div class="item-modelo">${v.modelo}</div>
+        <div class="item-codigo">${v.codigo}</div>
+      </div>
+      <div class="item-meta">
+        <span>🔑 ${v.placa}</span>
+        ${v.km && v.km!=='–'?'<span>📍 '+v.km+'</span>':''}
+        ${v.local?'<span>📌 '+v.local+'</span>':''}
+        ${v.cor?'<span class="cor">🎨 '+v.cor+'</span>':''}
+      </div>
+      <div class="item-bottom">
+        <div class="item-preco">
+          <span class="preco-label">Sujeito a aprovação</span>
+          <span class="preco-valor">${v.fipeRaw ? calcAprovacao(v.fipeRaw) : (v.aprovacao || 'consultar')}</span>
+          ${v.fipe?'<span class="fipe-val">FIPE: <strong>'+v.fipe+'</strong></span>':''}
+        </div>
+        <div class="item-btns">
+          <button class="btn-contato" onclick="abrirModal('contato','${v.codigo}','${v.placa}','${v.modelo.replace(/'/g,"\\'")}')">📲 Contato</button>
+          <button class="btn-laudo" onclick="abrirModal('laudo','${v.codigo}','${v.placa}','${v.modelo.replace(/'/g,"\\'")}')">📋 Laudo</button>
+        </div>
+      </div>`;
+    el.appendChild(item);
+  });
+}
+
+let _wa='', _tipo='', _codigo='', _placa='', _modelo='';
+function abrirModal(tipo, codigo, placa, modelo) {
+  _tipo = tipo; _codigo = codigo; _placa = placa; _modelo = modelo;
+  _wa = tipo==='contato' ? waI : waL;
+  document.getElementById('mNome').value = '';
+  document.getElementById('mTel').value = '';
+  if (tipo==='contato') {
+    document.getElementById('mIcon').textContent='📲';
+    document.getElementById('mTitulo').textContent='Entrar em Contato';
+    document.getElementById('mAviso').textContent='⚠️ Envie sua solicitação somente se tiver interesse real no veículo. Solicitações sem intenção de compra prejudicam o atendimento dos demais parceiros.';
+    document.getElementById('mConfirm').textContent='✅ Confirmar Interesse';
+  } else {
+    document.getElementById('mIcon').textContent='📋';
+    document.getElementById('mTitulo').textContent='Solicitar Laudo Cautelar';
+    document.getElementById('mAviso').textContent='Solicite o laudo somente se estiver avaliando a compra deste veículo. O laudo será enviado após confirmação de disponibilidade.';
+    document.getElementById('mConfirm').textContent='📋 Solicitar Laudo';
+  }
+  document.getElementById('mVeiculo').textContent = codigo + ' · ' + placa + ' · ' + modelo;
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('mConfirm').onclick = enviarWA;
+  setTimeout(() => document.getElementById('mNome').focus(), 100);
+}
+
+function fecharModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+function enviarWA() {
+  const nome = document.getElementById('mNome').value.trim();
+  const tel = document.getElementById('mTel').value.trim();
+  if (!nome) { document.getElementById('mNome').focus(); document.getElementById('mNome').style.borderColor='#e57373'; return; }
+  if (!tel) { document.getElementById('mTel').focus(); document.getElementById('mTel').style.borderColor='#e57373'; return; }
+
+  let msg = '';
+  if (_tipo === 'contato') {
+    msg = `Olá! Tenho interesse real no veículo abaixo:\n\n🔑 Código: ${_codigo}\n🚗 Placa: ${_placa}\n📋 Modelo: ${_modelo}\n\n👤 Nome: ${nome}\n📲 WhatsApp: ${tel}\n\nAguardo contato da TH Auto Repasse.`;
+  } else {
+    msg = `Olá! Gostaria de solicitar o laudo cautelar do veículo abaixo:\n\n🔑 Código: ${_codigo}\n🚗 Placa: ${_placa}\n📋 Modelo: ${_modelo}\n\n👤 Nome: ${nome}\n📲 WhatsApp: ${tel}\n\nAguardo retorno da TH Auto Repasse.`;
+  }
+  window.open('https://wa.me/'+_wa+'?text='+encodeURIComponent(msg), '_blank');
+  fecharModal();
+}
+</script>
+</body>
+</html>
