@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TH Check Auto | Consulta Veicular</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --preto: #080808;
+  --preto-card: #0f0f0f;
+  --preto-borda: #1c1c1c;
+  --preto-hover: #161616;
+  --ouro: #C9A84C;
+  --ouro-claro: #E2C06A;
+  --ouro-escuro: #9E7C2E;
+  --ouro-bg: rgba(201,168,76,0.08);
+  --branco: #f0f0f0;
+  --cinza: #777;
+  --cinza-claro: #aaa;
+  --verde: #22c55e;
+  --verde-bg: rgba(34,197,94,0.1);
+  --vermelho: #ef4444;
+  --vermelho-bg: rgba(239,68,68,0.1);
+  --amarelo: #f59e0b;
+  --amarelo-bg: rgba(245,158,11,0.1);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--preto); color:var(--branco); font-family:'Inter',sans-serif; min-height:100vh; }
+
+/* ── TELAS ── */
+.tela { display:none; min-height:100vh; }
+.tela.ativa { display:block; }
+
+/* ── AUTH ── */
+.auth-wrap {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  padding:24px;
+  background: radial-gradient(ellipse at top, #1a1200 0%, var(--preto) 60%);
+}
+.auth-box {
+  background:var(--preto-card); border:1px solid var(--preto-borda);
+  border-radius:20px; padding:40px; width:100%; max-width:400px;
+}
+.auth-logo { text-align:center; margin-bottom:32px; }
+.auth-logo-mark {
+  width:52px; height:52px; border-radius:12px;
+  background:var(--ouro); display:inline-flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:26px; color:#000; margin-bottom:10px;
+}
+.auth-logo-th { font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--ouro); letter-spacing:3px; display:block; }
+.auth-logo-sub { font-size:10px; color:var(--cinza); letter-spacing:4px; text-transform:uppercase; }
+.auth-tabs { display:flex; background:#0a0a0a; border-radius:10px; padding:4px; margin-bottom:28px; }
+.auth-tab {
+  flex:1; padding:9px; border:none; border-radius:8px;
+  font-size:13px; font-weight:600; cursor:pointer;
+  background:transparent; color:var(--cinza); transition:all .2s;
+}
+.auth-tab.active { background:var(--ouro); color:#000; }
+.auth-form { display:flex; flex-direction:column; gap:14px; }
+.input-group { display:flex; flex-direction:column; gap:5px; }
+.input-group label { font-size:11px; color:var(--cinza); font-weight:600; letter-spacing:1px; text-transform:uppercase; }
+.input-group input {
+  background:#0a0a0a; border:1px solid var(--preto-borda);
+  border-radius:10px; padding:12px 14px; color:var(--branco);
+  font-size:14px; outline:none; transition:border-color .2s; width:100%;
+}
+.input-group input:focus { border-color:var(--ouro-escuro); }
+.btn-auth {
+  background:var(--ouro); color:#000;
+  border:none; border-radius:10px; padding:13px;
+  font-size:14px; font-weight:800; cursor:pointer;
+  transition:background .2s; margin-top:4px; letter-spacing:0.5px;
+}
+.btn-auth:hover { background:var(--ouro-claro); }
+.auth-msg { font-size:12px; text-align:center; margin-top:8px; min-height:18px; }
+.auth-msg.erro { color:var(--vermelho); }
+.auth-msg.ok { color:var(--verde); }
+
+/* ── HEADER APP ── */
+.app-header {
+  position:sticky; top:0; z-index:200;
+  background:rgba(8,8,8,0.97); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--preto-borda);
+  padding:0 32px; height:60px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.app-logo { display:flex; align-items:center; gap:10px; cursor:pointer; }
+.app-logo-mark {
+  width:34px; height:34px; border-radius:8px;
+  background:var(--ouro); display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:18px; color:#000;
+}
+.app-logo-th { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--ouro); letter-spacing:2px; }
+.app-logo-sub { font-size:9px; color:var(--cinza); letter-spacing:3px; text-transform:uppercase; }
+.header-right { display:flex; align-items:center; gap:16px; }
+.saldo-pill {
+  background:var(--ouro-bg); border:1px solid var(--ouro-escuro);
+  border-radius:100px; padding:6px 14px;
+  font-size:13px; font-weight:700; color:var(--ouro);
+  display:flex; align-items:center; gap:6px;
+}
+.saldo-pill span { font-size:11px; color:var(--cinza); font-weight:400; }
+.btn-recarga {
+  background:var(--ouro); color:#000;
+  border:none; border-radius:8px; padding:7px 16px;
+  font-size:12px; font-weight:700; cursor:pointer; letter-spacing:0.5px;
+}
+.btn-recarga:hover { background:var(--ouro-claro); }
+.btn-sair {
+  background:transparent; border:1px solid var(--preto-borda);
+  border-radius:8px; padding:7px 14px;
+  font-size:12px; color:var(--cinza); cursor:pointer; transition:all .2s;
+}
+.btn-sair:hover { border-color:var(--vermelho); color:var(--vermelho); }
+.user-nome { font-size:13px; color:var(--cinza-claro); }
+
+/* ── APP MAIN ── */
+.app-main { max-width:760px; margin:0 auto; padding:32px 24px; }
+.app-section-title {
+  font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px;
+  color:var(--branco); margin-bottom:6px;
+}
+.app-section-sub { font-size:13px; color:var(--cinza); margin-bottom:24px; }
+
+/* ── CONSULTA BOX ── */
+.consulta-box {
+  background:var(--preto-card); border:1px solid var(--preto-borda);
+  border-radius:16px; padding:28px; margin-bottom:24px;
+}
+.placa-input-wrap { position:relative; margin-bottom:20px; }
+.placa-flag { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:20px; }
+#inputPlaca {
+  width:100%; height:56px; padding:0 16px 0 46px;
+  background:#0a0a0a; border:1px solid var(--preto-borda);
+  border-radius:12px; color:var(--branco);
+  font-size:24px; font-family:'Bebas Neue',sans-serif;
+  letter-spacing:6px; text-transform:uppercase; outline:none;
+  transition:border-color .2s;
+}
+#inputPlaca::placeholder { color:#2a2a2a; font-size:18px; letter-spacing:3px; }
+#inputPlaca:focus { border-color:var(--ouro-escuro); }
+
+.srv-label { font-size:11px; color:var(--cinza); font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+.servicos-sel { display:flex; flex-direction:column; gap:6px; margin-bottom:20px; }
+.srv-opt {
+  display:flex; align-items:center; gap:12px;
+  background:#0a0a0a; border:1px solid var(--preto-borda);
+  border-radius:10px; padding:11px 14px; cursor:pointer;
+  transition:border-color .15s, background .15s; user-select:none;
+}
+.srv-opt:hover { border-color:#333; }
+.srv-opt.active { border-color:var(--ouro-escuro); background:var(--ouro-bg); }
+.srv-check {
+  width:20px; height:20px; border-radius:5px; flex-shrink:0;
+  border:1.5px solid #333; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:transparent; transition:all .15s;
+}
+.srv-opt.active .srv-check { background:var(--ouro); border-color:var(--ouro); color:#000; }
+.srv-info { flex:1; text-align:left; }
+.srv-nome { font-size:13px; font-weight:600; color:var(--branco); }
+.srv-desc { font-size:11px; color:var(--cinza); margin-top:1px; }
+.srv-preco { font-size:14px; font-weight:700; color:var(--ouro); white-space:nowrap; }
+
+/* CRLV estados */
+.estados-wrap { display:none; background:#0a0a0a; border:1px solid var(--preto-borda); border-radius:10px; padding:14px; margin-top:-4px; }
+.estados-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.estado-btn {
+  background:#111; border:1px solid var(--preto-borda);
+  border-radius:8px; padding:8px 4px; cursor:pointer;
+  text-align:center; font-size:13px; font-weight:700; color:var(--branco);
+  transition:all .15s; line-height:1;
+}
+.estado-btn span { display:block; font-size:9px; font-weight:500; color:var(--ouro); margin-top:3px; }
+.estado-btn:hover { border-color:var(--ouro-escuro); }
+.estado-btn.active { border-color:var(--ouro); background:var(--ouro-bg); color:var(--ouro); }
+
+.consulta-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding-top:16px; border-top:1px solid var(--preto-borda); gap:12px;
+}
+.total-wrap { display:flex; flex-direction:column; }
+.total-label { font-size:11px; color:var(--cinza); }
+.total-valor { font-size:24px; font-weight:800; color:var(--branco); font-family:'Bebas Neue',sans-serif; letter-spacing:1px; }
+.btn-consultar {
+  height:48px; padding:0 28px;
+  background:var(--ouro); color:#000;
+  border:none; border-radius:10px;
+  font-size:14px; font-weight:800; cursor:pointer;
+  letter-spacing:0.5px; transition:all .2s; white-space:nowrap;
+}
+.btn-consultar:hover { background:var(--ouro-claro); }
+.btn-consultar:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ── RESULTADO ── */
+#resultado { margin-top:20px; }
+.res-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--preto-borda); }
+.res-placa { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:5px; }
+.res-badge { padding:5px 14px; border-radius:100px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+.badge-verde { background:var(--verde-bg); color:var(--verde); border:1px solid rgba(34,197,94,.25); }
+.badge-amarelo { background:var(--amarelo-bg); color:var(--amarelo); border:1px solid rgba(245,158,11,.25); }
+.badge-vermelho { background:var(--vermelho-bg); color:var(--vermelho); border:1px solid rgba(239,68,68,.25); }
+.score-wrap { margin-bottom:16px; }
+.score-topo { display:flex; justify-content:space-between; margin-bottom:5px; font-size:12px; }
+.score-label { color:var(--cinza); }
+.score-bar-bg { background:#1a1a1a; border-radius:100px; height:5px; overflow:hidden; }
+.score-bar { height:100%; border-radius:100px; transition:width 1s ease; }
+.res-bloco-titulo { font-size:10px; font-weight:700; color:var(--ouro); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+.res-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+.res-item { background:#0a0a0a; border-radius:8px; padding:10px 12px; }
+.res-item-label { font-size:10px; color:var(--cinza); text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; }
+.res-item-val { font-size:13px; font-weight:600; color:var(--branco); }
+.res-pdf { display:flex; align-items:center; gap:6px; color:var(--ouro); font-size:12px; font-weight:600; text-decoration:none; margin-top:8px; }
+.loading { display:flex; align-items:center; gap:10px; color:var(--cinza); font-size:13px; padding:12px 0; }
+.spinner { width:16px; height:16px; border-radius:50%; border:2px solid var(--preto-borda); border-top-color:var(--ouro); animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── HISTÓRICO ── */
+.historico-lista { display:flex; flex-direction:column; gap:8px; }
+.hist-item {
+  background:var(--preto-card); border:1px solid var(--preto-borda);
+  border-radius:12px; padding:14px 16px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.hist-placa { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:3px; color:var(--branco); }
+.hist-servicos { font-size:11px; color:var(--cinza); margin-top:2px; }
+.hist-data { font-size:11px; color:var(--cinza); text-align:right; }
+.hist-valor { font-size:13px; font-weight:700; color:var(--ouro); text-align:right; }
+.hist-vazio { text-align:center; padding:40px; color:var(--cinza); font-size:14px; }
+
+/* ── ADMIN ── */
+.admin-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.admin-card { background:var(--preto-card); border:1px solid var(--preto-borda); border-radius:14px; padding:20px; }
+.admin-card-num { font-family:'Bebas Neue',sans-serif; font-size:40px; color:var(--ouro); letter-spacing:1px; }
+.admin-card-label { font-size:12px; color:var(--cinza); margin-top:2px; }
+.admin-form { background:var(--preto-card); border:1px solid var(--preto-borda); border-radius:14px; padding:24px; margin-bottom:20px; }
+.admin-form h3 { font-size:15px; font-weight:700; margin-bottom:16px; color:var(--branco); }
+.admin-row { display:flex; gap:10px; align-items:flex-end; }
+.admin-row .input-group { flex:1; }
+.btn-admin {
+  height:42px; padding:0 20px;
+  background:var(--ouro); color:#000;
+  border:none; border-radius:10px;
+  font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;
+}
+.btn-admin:hover { background:var(--ouro-claro); }
+.usuarios-lista { display:flex; flex-direction:column; gap:8px; }
+.user-item {
+  background:var(--preto-card); border:1px solid var(--preto-borda);
+  border-radius:12px; padding:14px 16px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.user-info-nome { font-size:14px; font-weight:600; color:var(--branco); }
+.user-info-email { font-size:11px; color:var(--cinza); margin-top:2px; }
+.user-saldo-tag { background:var(--ouro-bg); border:1px solid var(--ouro-escuro); border-radius:100px; padding:4px 12px; font-size:12px; font-weight:700; color:var(--ouro); }
+.btn-add-credito { background:transparent; border:1px solid var(--preto-borda); border-radius:8px; padding:6px 14px; font-size:12px; color:var(--cinza-claro); cursor:pointer; transition:all .2s; }
+.btn-add-credito:hover { border-color:var(--ouro); color:var(--ouro); }
+
+/* ── NAV TABS ── */
+.nav-tabs { display:flex; gap:4px; margin-bottom:24px; background:#0a0a0a; border-radius:12px; padding:4px; }
+.nav-tab { flex:1; padding:9px; border:none; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; background:transparent; color:var(--cinza); transition:all .2s; }
+.nav-tab.active { background:var(--preto-card); color:var(--branco); border:1px solid var(--preto-borda); }
+
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:500; align-items:center; justify-content:center; padding:24px; }
+.modal-overlay.aberto { display:flex; }
+.modal-box { background:var(--preto-card); border:1px solid var(--preto-borda); border-radius:16px; padding:28px; width:100%; max-width:380px; }
+.modal-titulo { font-size:16px; font-weight:700; color:var(--branco); margin-bottom:6px; }
+.modal-sub { font-size:13px; color:var(--cinza); margin-bottom:20px; }
+.modal-btns { display:flex; gap:10px; margin-top:20px; }
+.btn-modal-cancel { flex:1; padding:11px; background:transparent; border:1px solid var(--preto-borda); border-radius:10px; color:var(--cinza); font-size:13px; cursor:pointer; }
+.btn-modal-ok { flex:1; padding:11px; background:var(--ouro); border:none; border-radius:10px; color:#000; font-size:13px; font-weight:700; cursor:pointer; }
+
+/* ── WHATSAPP ── */
+.whatsapp-fab { position:fixed; bottom:24px; right:24px; z-index:999; width:50px; height:50px; border-radius:50%; background:#22c55e; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(34,197,94,.3); text-decoration:none; transition:transform .2s; }
+.whatsapp-fab:hover { transform:scale(1.08); }
+.whatsapp-fab svg { width:26px; height:26px; fill:#fff; }
+
+@media (max-width:600px) {
+  .app-header { padding:0 16px; }
+  .user-nome { display:none; }
+  .app-main { padding:20px 16px; }
+  .admin-grid { grid-template-columns:1fr; }
+  .res-grid { grid-template-columns:1fr; }
+  .estados-grid { grid-template-columns:repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TELA: AUTH ══ -->
+<div class="tela ativa" id="telaAuth">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div class="auth-logo-mark">TH</div>
+        <span class="auth-logo-th">Check Auto</span>
+        <span class="auth-logo-sub">Consulta Veicular Profissional</span>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="setAuthTab('login')">Entrar</button>
+        <button class="auth-tab" onclick="setAuthTab('cadastro')">Criar conta</button>
+      </div>
+      <div class="auth-form" id="formLogin">
+        <div class="input-group">
+          <label>E-mail</label>
+          <input type="email" id="loginEmail" placeholder="seu@email.com">
+        </div>
+        <div class="input-group">
+          <label>Senha</label>
+          <input type="password" id="loginSenha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+        </div>
+        <button class="btn-auth" onclick="fazerLogin()">Entrar →</button>
+        <div class="auth-msg" id="msgLogin"></div>
+      </div>
+      <div class="auth-form" id="formCadastro" style="display:none">
+        <div class="input-group">
+          <label>Nome completo</label>
+          <input type="text" id="cadNome" placeholder="João Silva">
+        </div>
+        <div class="input-group">
+          <label>WhatsApp</label>
+          <input type="tel" id="cadWhats" placeholder="(62) 99999-9999">
+        </div>
+        <div class="input-group">
+          <label>E-mail</label>
+          <input type="email" id="cadEmail" placeholder="seu@email.com">
+        </div>
+        <div class="input-group">
+          <label>Senha</label>
+          <input type="password" id="cadSenha" placeholder="mínimo 6 caracteres">
+        </div>
+        <button class="btn-auth" onclick="fazerCadastro()">Criar minha conta →</button>
+        <div class="auth-msg" id="msgCadastro"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TELA: APP CLIENTE ══ -->
+<div class="tela" id="telaApp">
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="app-logo-mark">TH</div>
+      <div>
+        <div class="app-logo-th">Check Auto</div>
+        <div class="app-logo-sub">Consulta Veicular</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="saldo-pill">💰 <span>Saldo</span> <strong id="saldoDisplay">R$ 0,00</strong></div>
+      <span class="user-nome" id="userNome"></span>
+      <button class="btn-recarga" onclick="abrirRecarga()">+ Recarregar</button>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </header>
+
+  <div class="app-main">
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="setTab('consulta',this)">🔍 Nova Consulta</button>
+      <button class="nav-tab" onclick="setTab('historico',this)">📋 Histórico</button>
+    </div>
+
+    <!-- TAB CONSULTA -->
+    <div id="tabConsulta">
+      <div class="consulta-box">
+        <div class="placa-input-wrap">
+          <span class="placa-flag">🇧🇷</span>
+          <input type="text" id="inputPlaca" placeholder="ABC1D23" maxlength="7"
+            oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+            onkeydown="if(event.key==='Enter')consultar()">
+        </div>
+
+        <div class="srv-label">Selecione os serviços</div>
+        <div class="servicos-sel">
+          <div class="srv-opt active" data-id="consulta" data-preco="5.90" onclick="toggleServico(this)">
+            <div class="srv-check">✓</div>
+            <div class="srv-info"><div class="srv-nome">Consulta Simples</div><div class="srv-desc">Dados básicos do veículo</div></div>
+            <div class="srv-preco">R$ 5,90</div>
+          </div>
+          <div class="srv-opt" data-id="consulta_completa" data-preco="39.90" onclick="toggleServico(this)">
+            <div class="srv-check">✓</div>
+            <div class="srv-info"><div class="srv-nome">Consulta Completa</div><div class="srv-desc">Histórico, restrições e mais</div></div>
+            <div class="srv-preco">R$ 39,90</div>
+          </div>
+          <div class="srv-opt" data-id="gravame" data-preco="9.90" onclick="toggleServico(this)">
+            <div class="srv-check">✓</div>
+            <div class="srv-info"><div class="srv-nome">Gravame</div><div class="srv-desc">Alienação fiduciária</div></div>
+            <div class="srv-preco">R$ 9,90</div>
+          </div>
+          <div class="srv-opt" data-id="renajud" data-preco="9.90" onclick="toggleServico(this)">
+            <div class="srv-check">✓</div>
+            <div class="srv-info"><div class="srv-nome">RENAJUD</div><div class="srv-desc">Restrições judiciais</div></div>
+            <div class="srv-preco">R$ 9,90</div>
+          </div>
+          <div class="srv-opt" data-id="debitos" data-preco="29.90" onclick="toggleServico(this)">
+            <div class="srv-check">✓</div>
+            <div class="srv-info"><div class="srv-nome">Débitos + Código de Barras</div><div class="srv-desc">IPVA, multas e licenciamento</div></div>
+            <div class="srv-preco">R$ 29,90</div>
+          </div>
+          <div class="srv-opt" data-id="codigo_seguranca" data-preco="29.90" onclick="toggleServico(this)">
+            <div class="srv-check">✓</div>
+            <div class="srv-info"><div class="srv-nome">Código de Segurança</div><div class="srv-desc">Verificação do CRV</div></div>
+            <div class="srv-preco">R$ 29,90</div>
+          </div>
+          <div class="srv-opt" data-id="crlv" data-preco="0" onclick="toggleCRLV(this)">
+            <div class="srv-check">✓</div>
+            <div class="srv-info"><div class="srv-nome">CRLV Digital</div><div class="srv-desc">Emissão do documento digital</div></div>
+            <div class="srv-preco" id="crlvPreco">Selecione o estado</div>
+          </div>
+          <div class="estados-wrap" id="crlvEstados">
+            <div style="font-size:11px;color:var(--cinza);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Estado do veículo</div>
+            <div class="estados-grid">
+              <div class="estado-btn" data-uf="AL" data-preco="49.90" onclick="selecionarEstado(this)">AL<span>R$49,90</span></div>
+              <div class="estado-btn" data-uf="AP" data-preco="34.90" onclick="selecionarEstado(this)">AP<span>R$34,90</span></div>
+              <div class="estado-btn" data-uf="BA" data-preco="34.90" onclick="selecionarEstado(this)">BA<span>R$34,90</span></div>
+              <div class="estado-btn" data-uf="GO" data-preco="34.90" onclick="selecionarEstado(this)">GO<span>R$34,90</span></div>
+              <div class="estado-btn" data-uf="MA" data-preco="29.90" onclick="selecionarEstado(this)">MA<span>R$29,90</span></div>
+              <div class="estado-btn" data-uf="MG" data-preco="29.90" onclick="selecionarEstado(this)">MG<span>R$29,90</span></div>
+              <div class="estado-btn" data-uf="MT" data-preco="26.90" onclick="selecionarEstado(this)">MT<span>R$26,90</span></div>
+              <div class="estado-btn" data-uf="PI" data-preco="26.90" onclick="selecionarEstado(this)">PI<span>R$26,90</span></div>
+              <div class="estado-btn" data-uf="SE" data-preco="29.90" onclick="selecionarEstado(this)">SE<span>R$29,90</span></div>
+              <div class="estado-btn" data-uf="SP" data-preco="34.90" onclick="selecionarEstado(this)">SP<span>R$34,90</span></div>
+              <div class="estado-btn" data-uf="TO" data-preco="25.90" onclick="selecionarEstado(this)">TO<span>R$25,90</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="consulta-footer">
+          <div class="total-wrap">
+            <span class="total-label">Total selecionado</span>
+            <span class="total-valor" id="totalValor">R$ 5,90</span>
+          </div>
+          <button class="btn-consultar" id="btnConsultar" onclick="consultar()">Consultar →</button>
+        </div>
+        <div id="resultado"></div>
+      </div>
+    </div>
+
+    <!-- TAB HISTÓRICO -->
+    <div id="tabHistorico" style="display:none">
+      <div class="historico-lista" id="historicoLista">
+        <div class="hist-vazio">Nenhuma consulta realizada ainda.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TELA: ADMIN ══ -->
+<div class="tela" id="telaAdmin">
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="app-logo-mark">TH</div>
+      <div>
+        <div class="app-logo-th">Check Auto</div>
+        <div class="app-logo-sub">Painel Admin</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="user-nome" style="color:var(--ouro);font-weight:600;">👑 Admin</span>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </header>
+
+  <div class="app-main" style="max-width:860px;">
+    <div class="app-section-title">Painel Administrativo</div>
+    <div class="app-section-sub">Gerencie clientes e saldos</div>
+
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-num" id="adminTotalUsers">0</div>
+        <div class="admin-card-label">Clientes cadastrados</div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-num" id="adminTotalConsultas">0</div>
+        <div class="admin-card-label">Consultas realizadas</div>
+      </div>
+    </div>
+
+    <div class="admin-form">
+      <h3>➕ Adicionar crédito ao cliente</h3>
+      <div class="admin-row">
+        <div class="input-group">
+          <label>E-mail do cliente</label>
+          <input type="email" id="adminEmail" placeholder="cliente@email.com">
+        </div>
+        <div class="input-group" style="max-width:140px;">
+          <label>Valor (R$)</label>
+          <input type="number" id="adminValor" placeholder="50.00" step="0.01" min="1">
+        </div>
+        <button class="btn-admin" onclick="adicionarCredito()">Adicionar</button>
+      </div>
+      <div class="auth-msg" id="msgAdmin" style="margin-top:10px;text-align:left;"></div>
+    </div>
+
+    <div class="app-section-title" style="font-size:20px;margin-bottom:12px;">Clientes</div>
+    <div class="usuarios-lista" id="usuariosLista">
+      <div class="hist-vazio">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECARGA -->
+<div class="modal-overlay" id="modalRecarga">
+  <div class="modal-box">
+    <div class="modal-titulo">💰 Recarregar saldo</div>
+    <div class="modal-sub">Entre em contato pelo WhatsApp para adicionar créditos à sua conta.</div>
+    <div style="background:#0a0a0a;border-radius:10px;padding:14px;font-size:13px;color:var(--cinza-claro);line-height:1.6;">
+      📱 Envie uma mensagem informando:<br>
+      • Seu e-mail cadastrado<br>
+      • O valor que deseja recarregar<br>
+      • Faremos o PIX e liberamos na hora
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="fecharModal()">Fechar</button>
+      <button class="btn-modal-ok" onclick="window.open('https://wa.me/5562999999999?text=Olá! Quero recarregar meu saldo no TH Check Auto.','_blank')">Abrir WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- WHATSAPP -->
+<a href="https://wa.me/5562999999999" target="_blank" class="whatsapp-fab">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDWOTPvPiIIMVS3JkoeGUWScrufwUj51b4",
+  authDomain: "th-check-auto.firebaseapp.com",
+  projectId: "th-check-auto",
+  storageBucket: "th-check-auto.firebasestorage.app",
+  messagingSenderId: "315450849380",
+  appId: "1:315450849380:web:f3df662be90b6977adc771"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ADMIN_EMAIL = 'thautorepassego@gmail.com';
+const API_KEY = 'zc_live_4179697795951902c56c8c56d4091af0b530b092733a5dcbefdbd90a80a9e241';
+const API_BASE = 'https://api.zapcarconsulta.com.br/v1';
+
+let usuarioAtual = null;
+let saldoAtual = 0;
+let crlvEstado = null;
+
+// ── AUTH STATE ──
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    usuarioAtual = user;
+    if (user.email === ADMIN_EMAIL) {
+      mostrarTela('telaAdmin');
+      carregarAdmin();
+    } else {
+      mostrarTela('telaApp');
+      await carregarUsuario(user.uid);
+    }
+  } else {
+    mostrarTela('telaAuth');
+    usuarioAtual = null;
+  }
+});
+
+// ── TELAS ──
+window.mostrarTela = (id) => {
+  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+  document.getElementById(id).classList.add('ativa');
+};
+
+// ── AUTH ──
+window.setAuthTab = (tab) => {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('formLogin').style.display = tab === 'login' ? 'flex' : 'none';
+  document.getElementById('formCadastro').style.display = tab === 'cadastro' ? 'flex' : 'none';
+};
+
+window.fazerLogin = async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const msg = document.getElementById('msgLogin');
+  msg.className = 'auth-msg';
+  if (!email || !senha) { msg.textContent = 'Preencha todos os campos.'; msg.classList.add('erro'); return; }
+  try {
+    msg.textContent = 'Entrando...';
+    await signInWithEmailAndPassword(auth, email, senha);
+  } catch(e) {
+    msg.textContent = e.code === 'auth/invalid-credential' ? 'E-mail ou senha incorretos.' : 'Erro ao entrar. Tente novamente.';
+    msg.classList.add('erro');
+  }
+};
+
+window.fazerCadastro = async () => {
+  const nome = document.getElementById('cadNome').value.trim();
+  const whats = document.getElementById('cadWhats').value.trim();
+  const email = document.getElementById('cadEmail').value.trim();
+  const senha = document.getElementById('cadSenha').value;
+  const msg = document.getElementById('msgCadastro');
+  msg.className = 'auth-msg';
+  if (!nome || !email || !senha) { msg.textContent = 'Preencha todos os campos obrigatórios.'; msg.classList.add('erro'); return; }
+  try {
+    msg.textContent = 'Criando conta...';
+    const cred = await createUserWithEmailAndPassword(auth, email, senha);
+    await setDoc(doc(db, 'usuarios', cred.user.uid), {
+      nome, email, whatsapp: whats, saldo: 0, totalConsultas: 0, criadoEm: serverTimestamp()
+    });
+    msg.textContent = 'Conta criada! Entrando...'; msg.classList.add('ok');
+  } catch(e) {
+    msg.textContent = e.code === 'auth/email-already-in-use' ? 'Este e-mail já está cadastrado.' : 'Erro ao criar conta.';
+    msg.classList.add('erro');
+  }
+};
+
+window.sair = async () => { await signOut(auth); };
+
+// ── CARREGAR USUÁRIO ──
+async function carregarUsuario(uid) {
+  const snap = await getDoc(doc(db, 'usuarios', uid));
+  if (snap.exists()) {
+    const data = snap.data();
+    saldoAtual = data.saldo || 0;
+    document.getElementById('saldoDisplay').textContent = 'R$ ' + saldoAtual.toFixed(2).replace('.',',');
+    document.getElementById('userNome').textContent = data.nome?.split(' ')[0] || '';
+  } else {
+    await setDoc(doc(db, 'usuarios', uid), { email: usuarioAtual.email, saldo: 0, totalConsultas: 0, criadoEm: serverTimestamp() });
+  }
+  carregarHistorico();
+}
+
+// ── TABS ──
+window.setTab = (tab, btn) => {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tabConsulta').style.display = tab === 'consulta' ? 'block' : 'none';
+  document.getElementById('tabHistorico').style.display = tab === 'historico' ? 'block' : 'none';
+  if (tab === 'historico') carregarHistorico();
+};
+
+// ── SERVIÇOS ──
+window.toggleServico = (el) => {
+  el.classList.toggle('active');
+  atualizarTotal();
+};
+
+window.toggleCRLV = (el) => {
+  const painel = document.getElementById('crlvEstados');
+  const ativo = el.classList.contains('active');
+  if (ativo) {
+    el.classList.remove('active');
+    painel.style.display = 'none';
+    el.dataset.preco = '0';
+    crlvEstado = null;
+    document.getElementById('crlvPreco').textContent = 'Selecione o estado';
+  } else {
+    el.classList.add('active');
+    painel.style.display = 'block';
+  }
+  atualizarTotal();
+};
+
+window.selecionarEstado = (btn) => {
+  document.querySelectorAll('.estado-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  crlvEstado = btn.dataset.uf;
+  const preco = parseFloat(btn.dataset.preco);
+  document.querySelector('.srv-opt[data-id="crlv"]').dataset.preco = preco;
+  document.getElementById('crlvPreco').textContent = `R$ ${preco.toFixed(2).replace('.',',')} · ${btn.dataset.uf}`;
+  atualizarTotal();
+};
+
+function atualizarTotal() {
+  const total = Array.from(document.querySelectorAll('.srv-opt.active'))
+    .reduce((s, el) => s + parseFloat(el.dataset.preco || 0), 0);
+  document.getElementById('totalValor').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+}
+
+function getServicosAtivos() {
+  return Array.from(document.querySelectorAll('.srv-opt.active')).map(el => el.dataset.id);
+}
+
+function totalServicos() {
+  return Array.from(document.querySelectorAll('.srv-opt.active'))
+    .reduce((s, el) => s + parseFloat(el.dataset.preco || 0), 0);
+}
+
+// ── CONSULTAR ──
+window.consultar = async () => {
+  const placa = document.getElementById('inputPlaca').value.trim();
+  const servicos = getServicosAtivos();
+  const total = totalServicos();
+
+  if (!placa || placa.length < 7) { alert('Informe uma placa válida (7 caracteres).'); return; }
+  if (servicos.length === 0) { alert('Selecione pelo menos um serviço.'); return; }
+  if (servicos.includes('crlv') && !crlvEstado) { alert('Selecione o estado do veículo para o CRLV Digital.'); return; }
+  if (saldoAtual < total) {
+    alert(`Saldo insuficiente.\n\nSaldo atual: R$ ${saldoAtual.toFixed(2).replace('.',',')}\nTotal necessário: R$ ${total.toFixed(2).replace('.',',')}\n\nRecarregue seu saldo via WhatsApp.`);
+    return;
+  }
+
+  const btn = document.getElementById('btnConsultar');
+  btn.disabled = true; btn.textContent = 'Consultando...';
+  const res = document.getElementById('resultado');
+  res.innerHTML = '<div class="loading"><div class="spinner"></div> Processando consulta...</div>';
+
+  try {
+    // Descontar saldo
+    await updateDoc(doc(db, 'usuarios', usuarioAtual.uid), {
+      saldo: increment(-total),
+      totalConsultas: increment(servicos.length)
+    });
+    saldoAtual -= total;
+    document.getElementById('saldoDisplay').textContent = 'R$ ' + saldoAtual.toFixed(2).replace('.',',');
+
+    // Disparar consultas
+    const resultados = await Promise.all(servicos.map(s => dispararConsulta(s, placa)));
+
+    // Salvar histórico
+    await addDoc(collection(db, 'usuarios', usuarioAtual.uid, 'consultas'), {
+      placa, servicos, total, resultados: resultados.map(r => r.dados || {}),
+      criadoEm: serverTimestamp()
+    });
+
+    renderResultados(placa, servicos, resultados, res);
+  } catch(e) {
+    res.innerHTML = `<div style="color:var(--vermelho);font-size:13px;padding:8px 0;">⚠️ ${e.message}</div>`;
+    // Estornar saldo em caso de erro
+    await updateDoc(doc(db, 'usuarios', usuarioAtual.uid), { saldo: increment(total) });
+    saldoAtual += total;
+    document.getElementById('saldoDisplay').textContent = 'R$ ' + saldoAtual.toFixed(2).replace('.',',');
+  }
+  btn.disabled = false; btn.textContent = 'Consultar →';
+};
+
+async function dispararConsulta(servico, placa) {
+  const body = { servico, placa };
+  if (servico === 'crlv' && crlvEstado) body.estado = crlvEstado;
+  const r = await fetch(`${API_BASE}/consultas`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.message || `Erro em ${servico}`);
+  return aguardarResultado(d.id);
+}
+
+function aguardarResultado(id, n = 0) {
+  return new Promise((res, rej) => {
+    const poll = async () => {
+      if (n > 20) return rej(new Error('Tempo esgotado'));
+      try {
+        const r = await fetch(`${API_BASE}/consultas/${id}`, { headers: { 'Authorization': `Bearer ${API_KEY}` } });
+        const d = await r.json();
+        if (d.status === 'concluido') res(d);
+        else if (d.status === 'erro') rej(new Error('Erro na consulta'));
+        else setTimeout(() => { n++; poll(); }, 2500);
+      } catch { setTimeout(() => { n++; poll(); }, 2500); }
+    };
+    setTimeout(poll, 2000);
+  });
+}
+
+const nomesServico = { consulta:'Consulta Simples', consulta_completa:'Consulta Completa', gravame:'Gravame', renajud:'RENAJUD', debitos:'Débitos', codigo_seguranca:'Código de Segurança', crlv:'CRLV Digital' };
+
+function renderResultados(placa, servicos, resultados, res) {
+  const allDados = Object.assign({}, ...resultados.map(r => r.dados || {}));
+  const score = calcScore(allDados);
+  const { cor, label, cls } = scoreInfo(score);
+
+  const blocos = servicos.map((s, i) => {
+    const d = resultados[i]?.dados || {};
+    const campos = Object.entries(d).filter(([k]) => !['id','status','placa'].includes(k)).slice(0, 8);
+    const grid = campos.length
+      ? `<div class="res-grid">${campos.map(([k,v]) => `<div class="res-item"><div class="res-item-label">${k.replace(/_/g,' ')}</div><div class="res-item-val">${typeof v === 'boolean' ? (v?'Sim':'Não') : (v||'—')}</div></div>`).join('')}</div>`
+      : `<div style="font-size:12px;color:var(--cinza);padding:4px 0;">Dados recebidos ✓</div>`;
+    const pdf = resultados[i]?.pdf_url ? `<a href="${resultados[i].pdf_url}" target="_blank" class="res-pdf">📄 Baixar PDF ${nomesServico[s]}</a>` : '';
+    return `<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--preto-borda);">
+      <div class="res-bloco-titulo">${nomesServico[s]}</div>${grid}${pdf}</div>`;
+  }).join('');
+
+  res.innerHTML = `
+    <div style="border-top:1px solid var(--preto-borda);margin-top:16px;padding-top:16px;">
+      <div class="res-header">
+        <div class="res-placa">${placa}</div>
+        <div class="res-badge ${cls}">${label}</div>
+      </div>
+      <div class="score-wrap">
+        <div class="score-topo"><span class="score-label">Score de risco</span><span style="font-size:13px;font-weight:700;color:${cor}">${score}/100</span></div>
+        <div class="score-bar-bg"><div class="score-bar" id="sBar" style="width:0%;background:${cor}"></div></div>
+      </div>
+      ${blocos}
+    </div>`;
+  setTimeout(() => { const b = document.getElementById('sBar'); if(b) b.style.width = score+'%'; }, 100);
+}
+
+function calcScore(d) {
+  let s = 100;
+  if (d.gravame && d.gravame !== false) s -= 30;
+  if (d.renajud && d.renajud !== false) s -= 25;
+  if (d.roubo && d.roubo !== false) s -= 40;
+  if (d.sinistro && d.sinistro !== false) s -= 20;
+  if (d.leilao && d.leilao !== false) s -= 15;
+  if (d.restricao_administrativa && d.restricao_administrativa !== false) s -= 15;
+  return Math.max(0, s);
+}
+function scoreInfo(s) {
+  if (s >= 70) return { cor:'var(--verde)', label:'✓ COMPRA SEGURA', cls:'badge-verde' };
+  if (s >= 40) return { cor:'var(--amarelo)', label:'⚠ ATENÇÃO', cls:'badge-amarelo' };
+  return { cor:'var(--vermelho)', label:'✕ RECUSAR', cls:'badge-vermelho' };
+}
+
+// ── HISTÓRICO ──
+async function carregarHistorico() {
+  if (!usuarioAtual) return;
+  const lista = document.getElementById('historicoLista');
+  lista.innerHTML = '<div class="hist-vazio">Carregando...</div>';
+  try {
+    const q = query(collection(db, 'usuarios', usuarioAtual.uid, 'consultas'), orderBy('criadoEm','desc'), limit(20));
+    const snap = await getDocs(q);
+    if (snap.empty) { lista.innerHTML = '<div class="hist-vazio">Nenhuma consulta realizada ainda.</div>'; return; }
+    lista.innerHTML = snap.docs.map(d => {
+      const c = d.data();
+      const data = c.criadoEm?.toDate ? c.criadoEm.toDate().toLocaleDateString('pt-BR') : '—';
+      const hora = c.criadoEm?.toDate ? c.criadoEm.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div class="hist-item">
+        <div>
+          <div class="hist-placa">${c.placa}</div>
+          <div class="hist-servicos">${(c.servicos||[]).map(s => nomesServico[s]||s).join(' · ')}</div>
+        </div>
+        <div>
+          <div class="hist-valor">R$ ${(c.total||0).toFixed(2).replace('.',',')}</div>
+          <div class="hist-data">${data} ${hora}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch { lista.innerHTML = '<div class="hist-vazio">Erro ao carregar histórico.</div>'; }
+}
+
+// ── MODAL ──
+window.abrirRecarga = () => document.getElementById('modalRecarga').classList.add('aberto');
+window.fecharModal = () => document.getElementById('modalRecarga').classList.remove('aberto');
+
+// ── ADMIN ──
+async function carregarAdmin() {
+  try {
+    const snap = await getDocs(collection(db, 'usuarios'));
+    document.getElementById('adminTotalUsers').textContent = snap.size;
+    let totalC = 0;
+    const lista = document.getElementById('usuariosLista');
+    if (snap.empty) { lista.innerHTML = '<div class="hist-vazio">Nenhum cliente cadastrado.</div>'; return; }
+    lista.innerHTML = snap.docs.map(d => {
+      const u = d.data();
+      totalC += u.totalConsultas || 0;
+      return `<div class="user-item">
+        <div>
+          <div class="user-info-nome">${u.nome || 'Sem nome'}</div>
+          <div class="user-info-email">${u.email} · ${u.whatsapp||'—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="user-saldo-tag">R$ ${(u.saldo||0).toFixed(2).replace('.',',')}</div>
+          <button class="btn-add-credito" onclick="preencherAdmin('${u.email}')">+ Crédito</button>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('adminTotalConsultas').textContent = totalC;
+  } catch(e) { console.error(e); }
+}
+
+window.preencherAdmin = (email) => {
+  document.getElementById('adminEmail').value = email;
+  document.getElementById('adminValor').focus();
+};
+
+window.adicionarCredito = async () => {
+  const email = document.getElementById('adminEmail').value.trim();
+  const valor = parseFloat(document.getElementById('adminValor').value);
+  const msg = document.getElementById('msgAdmin');
+  msg.className = 'auth-msg';
+  if (!email || !valor || valor <= 0) { msg.textContent = 'Preencha e-mail e valor válido.'; msg.classList.add('erro'); return; }
+  try {
+    msg.textContent = 'Buscando usuário...';
+    const snap = await getDocs(collection(db, 'usuarios'));
+    const userDoc = snap.docs.find(d => d.data().email === email);
+    if (!userDoc) { msg.textContent = 'Usuário não encontrado.'; msg.classList.add('erro'); return; }
+    await updateDoc(doc(db, 'usuarios', userDoc.id), { saldo: increment(valor) });
+    msg.textContent = `✓ R$ ${valor.toFixed(2).replace('.',',')} adicionado para ${email}`;
+    msg.classList.add('ok');
+    document.getElementById('adminEmail').value = '';
+    document.getElementById('adminValor').value = '';
+    carregarAdmin();
+  } catch(e) { msg.textContent = 'Erro ao adicionar crédito.'; msg.classList.add('erro'); }
+};
+</script>
+</body>
+</html>
